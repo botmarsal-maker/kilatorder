@@ -22,73 +22,65 @@ Bot Telegram otomatis ini dibangun dengan `Python` dan `pyTelegramBotAPI`. Lengk
 
 ---
 
-## 🚀 Panduan Instalasi (Ubuntu VPS / Linux Server)
+## 🚀 Panduan Instalasi Lengkap (Ubuntu VPS dengan Git Clone)
 
-**1. Update Server Repository & Install Dependensi Dasar**
+**1. Update Server & Install Dependensi Dasar**
+Buka terminal/SSH VPS Anda, lalu jalankan:
 ```bash
 sudo apt update && sudo apt upgrade -y
-sudo apt install python3 python3-pip python3-venv git -y
+sudo apt install python3 python3-pip python3-venv git nodejs npm -y
+sudo npm install -g pm2
 ```
 
-**2. Siapkan Direktori & Salin File**
+**2. Clone Repository**
+Ganti URL di bawah dengan link repository GitHub Anda (jika kode sudah di-push), atau gunakan format ini:
 ```bash
-mkdir -p /root/storebot
-cd /root/storebot
+cd ~
+git clone https://github.com/USERNAME/NAMA-REPO-ANDA.git Kilatorder
+cd Kilatorder/storebot
 ```
-*(Unggah atau salin semua source code / direktori ini ke folder `/root/storebot`.)*
+*(Catatan: pastikan Anda menyesuaikan link github dan masuk ke dalam folder tempat `bot.py` berada)*
 
 **3. Buat Virtual Environment Python**
+Langkah ini penting agar package Python tidak bentrok.
 ```bash
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-**4. Konfigurasi Token BOT**
-Edit `config.py` sesuai kebutuhan:
+**4. Konfigurasi Environment (.env)**
+Buat file konfigurasi rahasia:
 ```bash
-nano config.py
-# Pastikan BOT_TOKEN diisi token dari @BotFather
-# Pastikan ADMIN_IDS diisi dengan Chat ID admin
+nano .env
 ```
+Isi dengan data token Anda (jangan lupa sesuaikan!):
+```env
+BOT_TOKEN=1234567890:AAH_TokenDariBotFather
+ADMIN_IDS=123456789,987654321
+DB_PATH=data/store.db
+```
+Simpan: Tekan `Ctrl+X`, ketik `y`, lalu tekan `Enter`.
 
-**5. Deploy menggunakan Systemd (Background Service)**
-Buat file service backend agar bot menyala 24/7 dan auto-restart jika server di-reboot.
-
+**5. Jalankan Bot dengan PM2**
+Jalankan file `bot.py` menggunakan interpreter dari dalam virtual environment agar requirements dan `.env` terdeteksi:
 ```bash
-sudo nano /etc/systemd/system/storebot.service
-```
-Isi konfigurasi berikut ini ke editor nano (tekan `Ctrl+X` - `Y` - `Enter` untuk menyimpan):
-```ini
-[Unit]
-Description=Telegram Store Digital Bot
-After=network.target
-
-[Service]
-User=root
-WorkingDirectory=/root/storebot
-ExecStart=/root/storebot/venv/bin/python /root/storebot/bot.py
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
+pm2 start bot.py --name bot-toko --interpreter ./venv/bin/python
 ```
 
-**6. Aktifkan Daemon Bot**
+**6. Buat Auto-Restart (PM2 Startup)**
+Agar bot selalu menyala meski VPS di-reboot:
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable storebot
-sudo systemctl start storebot
+pm2 save
+pm2 startup
 ```
 
-Cek status BOT Anda:
-```bash
-sudo systemctl status storebot
-```
-Atau lihat log live-nya:
-```bash
-sudo journalctl -u storebot.service -f
-```
+---
 
 Selesai! 🎉 Bot Anda sekarang siap beroperasi.
+
+**Perintah PM2 Penting:**
+- `pm2 logs bot-toko` (Melihat status jalannya bot / mencari pesan error)
+- `pm2 restart bot-toko` (Meresart bot)
+- `pm2 stop bot-toko` (Menghentikan bot)
+- `pm2 flush` (Menghapus riwayat log yang penuh)
